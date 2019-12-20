@@ -1,0 +1,23 @@
+---
+- name: create new users in openshift 
+  hosts: localhost
+  gather_facts: false
+  run_once: true
+  var:
+    openshift_cli: oc
+    user: openshiftdev01
+  tasks:
+    - name: create new user using htpasswd
+      shell: |
+        printf " openshiftdev01:$(openssl passwd -apr1 openshift4)\n" >> "htpasswd-dd"
+      ignore_errors: true
+
+    - name: adding the htpasswd to secret 
+      shell: |
+         {{ openshift_cli }} create secret generic htpass-dd-secret --from-file=htpasswd=htpasswd-dd -n openshift-config
+      ignore_errors: true
+
+    - name: run the htpasswd-adinsmore-cr
+      shell: |  
+	 {{ openshift_cli }} apply -f htpasswd-dd-cr.yaml
+      ignore_errors: true
